@@ -18,7 +18,14 @@ Hämta nyheter med API:
 Resultat bero på vilken kategori som är vald och vad användaren sökt på
 
 Visa upp nyheter och skapa HTML element
+Ska innehålla:
+- Titel
+- Kort beskrivning
+- Publiceringsdatum
+- Källa/författare
+- Läs mer-knapp, öppnar länken till artikeln
 
+Kategori och sökfilter ska appliceras
 Se till att knappar och inputs fungerar
 
 
