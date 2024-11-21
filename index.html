@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyheter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Nyheter</h1>
+        <div id="filterContainer">
+            <input type="text" id="searchInput" placeholder="Sök efter nyheter...">
+            <select id="selectCategory">
+                <option value="">Alla</option>
+                <option value="">Kategori 1</option>
+                <option value="">Kategori 2</option>
+                <option value="">Kategori 3</option>
+            </select>
+            <button id="searchButton">Sök</button>
+        </div>
+    </header>
+    <main>
+        <div id="newsContainer"></div>
+        <p id="errorMessage"></p>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

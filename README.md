@@ -28,6 +28,7 @@ Ska innehålla:
 Kategori och sökfilter ska appliceras
 Se till att knappar och inputs fungerar
 
+Felhantering och validering för allt
 
 Saker att lägga till:
 Paginering, att vi bara visar upp ett visst antal men att man kan bläddra mellan flera sidor
