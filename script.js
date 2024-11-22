@@ -10,9 +10,9 @@ const newsContainer = document.getElementById("newsContainer");
 const errorMessage = document.getElementById("errorMessage");
 const savedNewsContainer = document.getElementById("savedNewsContainer");
 
-function fetchNews(query = "", category = "") {
+function fetchNews(query = "", category = "", page = 1) {
 
-    let url = `https://content.guardianapis.com/search?q=${query}&from-date=2014-01-01&api-key=${apiKey}`;
+    let url = `https://content.guardianapis.com/search?q=${query}&from-date=2014-01-01&page=${page}&page-size=5&order-by=newest&api-key=${apiKey}`;
 
     if (category) {
         url += `&section=${category}`; // Adds category to the URL if we have one chosen
@@ -29,6 +29,7 @@ function fetchNews(query = "", category = "") {
     })
     .then(data => {
         displayNews(data.response.results);
+        createPages(data.response.pages, page, query, category);
 
         const renderArticle = localStorage.getItem("savedArticles");
 
@@ -43,6 +44,12 @@ function fetchNews(query = "", category = "") {
         errorMessage.textContent = "Fel inträffade vid hämtning av data!";
     });
 }
+
+searchButton.addEventListener("click", () => {
+    const query = searchInput.value.trim();
+    const category = selectCategory.value;
+    fetchNews(query, category);
+});
 
 function displayNews(articles) {
 
@@ -72,6 +79,12 @@ function displayNews(articles) {
         articleCard.appendChild(saveButton);
         newsContainer.appendChild(articleCard);
     });
+
+    const existingPagination = document.getElementById("paginationContainer");
+    
+    if (existingPagination) {
+        existingPagination.remove();
+    }
 }
 
 function renderSavedArticles() {
@@ -104,11 +117,66 @@ function renderSavedArticles() {
     });
 }
 
-searchButton.addEventListener("click", () => {
-    const query = searchInput.value.trim();
-    const category = selectCategory.value;
-    fetchNews(query, category);
-});
+function createPages(totalPages, currentPage, query, category) {
+    let pageContainer = document.getElementById("pageContainer");
+
+    if (!pageContainer) {
+        pageContainer = document.createElement("div");
+        pageContainer.setAttribute("id", "pageContainer");
+        newsContainer.parentNode.appendChild(pageContainer);
+    } else {
+        pageContainer.innerHTML = "";
+    }
+
+    // Begränsa totalPages till högst 100
+    totalPages = Math.min(totalPages, 100);
+
+    const maxVisiblePages = 5; // Antal sidor att visa
+    const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (startPage > 1) {
+        const firstPageButton = document.createElement("button");
+        firstPageButton.textContent = "1";
+        firstPageButton.addEventListener("click", () => fetchNews(query, category, 1));
+        pageContainer.appendChild(firstPageButton);
+
+        if (startPage > 2) {
+            const dots = document.createElement("span");
+            dots.textContent = "...";
+            pageContainer.appendChild(dots);
+        }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const pageButton = document.createElement("button");
+        pageButton.classList.add("pageButton");
+        pageButton.textContent = i;
+
+        if (i === currentPage) {
+            pageButton.classList.add("active");
+        }
+
+        pageButton.addEventListener("click", () => {
+            fetchNews(query, category, i);
+        });
+
+        pageContainer.appendChild(pageButton);
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const dots = document.createElement("span");
+            dots.textContent = "...";
+            pageContainer.appendChild(dots);
+        }
+
+        const lastPageButton = document.createElement("button");
+        lastPageButton.textContent = totalPages;
+        lastPageButton.addEventListener("click", () => fetchNews(query, category, totalPages));
+        pageContainer.appendChild(lastPageButton);
+    }
+}
 
 
 function saveArticle(article) {
