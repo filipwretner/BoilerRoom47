@@ -1,12 +1,10 @@
-const apiKey = "568f5405a68c48f4abe802adc355b282"; // API nyckel från newsapi.org
+const apiKey = "658e6403-0a2e-4101-80da-026e0e38aeb5"; // API nyckel från Guardian
 
-// GET https://newsapi.org/v2/everything?q=(SÖKTERM)&apiKey=${apiKey}
-// Lägg till &-tecken efter sökterm för att lägga till fler parametrar
-// Exempel, lägger till tidspan: https://newsapi.org/v2/everything?q=(SÖKTERM)&from=2024-11-21&apiKey=${apiKey}
-// Visar artiklar för vårt sökord från det datum vi skriver in
-// Sorteringsexempel: Lägger till att vi sorterar efter popularitet: https://newsapi.org/v2/everything?q=(SÖKTERM)&from=2024-11-21&sortBy=popularity&apiKey=${apiKey}
+// GET https://content.guardianapis.com/${category}/${keyword}?api-key=${apiKey}
+// Tags = sökord
+// Sections = kategori
 
-// Länk till alla endpoints: https://newsapi.org/docs/endpoints/everything
+// Länk till alla endpoints: https://open-platform.theguardian.com/documentation/
 
 const searchInput = document.getElementById("searchInput");
 const selectCategory = document.getElementById("selectCategory");
@@ -14,8 +12,54 @@ const searchButton = document.getElementById("searchButton");
 const newsContainer = document.getElementById("newsContainer");
 const errorMessage = document.getElementById("errorMessage");
 
-// We want a function that fetches articles from the API
+function fetchNews(){
 
-// We want a function that adds HTML elements to display the articles
+    fetch(`https://content.guardianapis.com/search?q=debate&tag=politics/politics&from-date=2014-01-01&api-key=${apiKey}`)
+    .then(response => {
 
-// Event listener for search button
+        if(!response.ok) {
+            throw new Error (`HTTP Error! Status: ${response.status}`);
+        }
+        return response.json();
+
+    })
+    .then(data => {
+        displayNews(data.response.results);
+    })
+    .catch(error => {
+        console.error("Error när nyheter skulle hämtas!", error);
+        errorMessage.textContent = "Fel inträffade!";
+    });
+}
+
+function displayNews(articles) {
+
+    newsContainer.innerHTML = "";
+
+    if (articles.length === 0) {
+        newsContainer.innerHTML = "<p>Inga nyheter hittades</p>";
+        return;
+    }
+
+    articles.forEach(article => {
+        const articleCard = document.createElement("div");
+        articleCard.classList.add("articleCard");
+
+        articleCard.innerHTML = `
+            <h2>${article.webTitle}</h2>
+            <p>${article.sectionName}</p>
+            <p>${article.webPublicationDate}</p>
+            <a href="${article.webUrl}">LINK TO ARTICLE</a>
+        `;
+
+        newsContainer.appendChild(articleCard);
+    });
+}
+
+searchButton.addEventListener("click", () => {
+    const query = searchInput.value.trim();
+    const category = selectCategory.value;
+    fetchNews(query, category);
+});
+
+fetchNews();
