@@ -12,7 +12,7 @@ const savedNewsContainer = document.getElementById("savedNewsContainer");
 
 function fetchNews(query = "", category = "", page = 1) {
 
-    let url = `https://content.guardianapis.com/search?q=${query}&from-date=2014-01-01&page=${page}&page-size=5&order-by=newest&api-key=${apiKey}`;
+    let url = `https://content.guardianapis.com/search?q=${query}&from-date=2014-01-01&page=${page}&page-size=6&order-by=newest&api-key=${apiKey}`;
 
     if (category) {
         url += `&section=${category}`; // Adds category to the URL if we have one chosen
@@ -60,6 +60,7 @@ function displayNews(articles) {
         return;
     }
 
+    // Creates cards for every article we fetch with the API
     articles.forEach(article => {
         const articleCard = document.createElement("div");
         articleCard.classList.add("articleCard");
@@ -80,11 +81,6 @@ function displayNews(articles) {
         newsContainer.appendChild(articleCard);
     });
 
-    const existingPagination = document.getElementById("paginationContainer");
-    
-    if (existingPagination) {
-        existingPagination.remove();
-    }
 }
 
 function renderSavedArticles() {
@@ -96,6 +92,7 @@ function renderSavedArticles() {
         return;
     }
 
+    // Creates cards for every article stored in localStorage
     savedArticles.forEach(article => {
         const articleCard = document.createElement("div");
         articleCard.classList.add("articleCard");
@@ -120,7 +117,7 @@ function renderSavedArticles() {
 function createPages(totalPages, currentPage, query, category) {
     let pageContainer = document.getElementById("pageContainer");
 
-    if (!pageContainer) {
+    if (!pageContainer) { // Makes sure we render a new container 
         pageContainer = document.createElement("div");
         pageContainer.setAttribute("id", "pageContainer");
         newsContainer.parentNode.appendChild(pageContainer);
@@ -128,19 +125,21 @@ function createPages(totalPages, currentPage, query, category) {
         pageContainer.innerHTML = "";
     }
 
-    // Begränsa totalPages till högst 100
-    totalPages = Math.min(totalPages, 100);
+    totalPages = Math.min(totalPages, 100); // Sets max number of pages to 100
 
-    const maxVisiblePages = 5; // Antal sidor att visa
-    const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    const maxVisiblePages = 5; 
+    const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2)); // Sets the start page in relation to current page
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1); // Sets end page in relation to the max amount of pages
 
     if (startPage > 1) {
+
+        // Makes sure we have a button that always directs to the first page
         const firstPageButton = document.createElement("button");
         firstPageButton.textContent = "1";
         firstPageButton.addEventListener("click", () => fetchNews(query, category, 1));
         pageContainer.appendChild(firstPageButton);
 
+        // Adds dots between the first button if there's a gap to the start page, if startPage is 1 or 2 there's no dots
         if (startPage > 2) {
             const dots = document.createElement("span");
             dots.textContent = "...";
@@ -148,7 +147,9 @@ function createPages(totalPages, currentPage, query, category) {
         }
     }
 
+    // Creates buttons between our start and end page
     for (let i = startPage; i <= endPage; i++) {
+
         const pageButton = document.createElement("button");
         pageButton.classList.add("pageButton");
         pageButton.textContent = i;
@@ -164,7 +165,10 @@ function createPages(totalPages, currentPage, query, category) {
         pageContainer.appendChild(pageButton);
     }
 
+    // Creates button that directs to last available page, but only if we select different page than the last
     if (endPage < totalPages) {
+
+        // Creates some dots between endPage button and last button
         if (endPage < totalPages - 1) {
             const dots = document.createElement("span");
             dots.textContent = "...";
@@ -181,6 +185,7 @@ function createPages(totalPages, currentPage, query, category) {
 
 function saveArticle(article) {
 
+    // Saves article based on it's URL, can't save same article twice
     if (!savedArticles.some(saved => saved.webUrl === article.webUrl)) {
         savedArticles.push(article);
         renderSavedArticles();
@@ -191,6 +196,7 @@ function saveArticle(article) {
 
 function removeArticle(article) {
    
+    // Filters out the article we want to remove by it's URL
     savedArticles = savedArticles.filter(saved => saved.webUrl !== article.webUrl);
 
     renderSavedArticles();
@@ -204,6 +210,7 @@ function saveToLocalStorage () {
 
 fetchNews();
 
+// Only render saved articles if we have any saved
 const saved = localStorage.getItem("savedArticles");
 
 if(saved) {
