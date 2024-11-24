@@ -35,3 +35,8 @@ Paginering, att vi bara visar upp ett visst antal men att man kan bläddra mella
 LocalStorage funktion - Färdig
 Fler språk
 Visa från flera olika nyhetskällor - parallella fetch()
+
+Att göra inför presentation:
+
+-Knappar och annan styling
+-Istället för att visa local storage hela tiden kan vi ha en knapp som renderar local storage
