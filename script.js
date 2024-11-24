@@ -31,17 +31,18 @@ function fetchNews(query = "", category = "", page = 1) {
         displayNews(data.response.results);
         createPages(data.response.pages, page, query, category);
 
-        const renderArticle = localStorage.getItem("savedArticles");
+        // Only render local storage if we have any articles stored
+        const saved = localStorage.getItem("savedArticles");
 
-        if (renderArticle) {
-            savedArticles = JSON.parse(renderArticle); // Adds the team saved in localStorage when the page loads
+        if (saved) {
+            savedArticles = JSON.parse(saved); 
             renderSavedArticles();
         }
 
     })
     .catch(error => {
-        console.error("Fel när nyheter skulle hämtas!", error);
-        errorMessage.textContent = "Fel inträffade vid hämtning av data!";
+        console.error("An error occured when fetchind data!", error);
+        errorMessage.textContent = "An error occured when fetching data!";
     });
 }
 
@@ -56,7 +57,7 @@ function displayNews(articles) {
     newsContainer.innerHTML = "";
 
     if (articles.length === 0) {
-        newsContainer.innerHTML = "<p>Inga nyheter hittades</p>";
+        newsContainer.innerHTML = "<p>Couldn't find any news</p>";
         return;
     }
 
@@ -67,20 +68,19 @@ function displayNews(articles) {
 
         articleCard.innerHTML = `
             <h2>${article.webTitle}</h2>
-            <p>${article.sectionName}</p>
-            <p>${article.webPublicationDate}</p>
-            <a href="${article.webUrl}">LINK TO ARTICLE</a>
+            <p>Category: ${article.sectionName}</p>
+            <p>Published: ${article.webPublicationDate}</p>
+            <a href="${article.webUrl}">Read article</a>
         `;
 
         const saveButton = document.createElement("button");
         saveButton.classList.add("saveButton");
-        saveButton.textContent = "Spara och läs senare";
+        saveButton.textContent = "Save and read later";
         saveButton.addEventListener("click", () => saveArticle(article));
 
         articleCard.appendChild(saveButton);
         newsContainer.appendChild(articleCard);
     });
-
 }
 
 function renderSavedArticles() {
@@ -88,7 +88,7 @@ function renderSavedArticles() {
     savedNewsContainer.innerHTML = "";
 
     if (savedArticles.length === 0) {
-        savedNewsContainer.innerHTML = "<p>Inga nyheter hittades</p>";
+        savedNewsContainer.innerHTML = "<p>You don't have any news saved.</p>";
         return;
     }
 
@@ -99,14 +99,14 @@ function renderSavedArticles() {
 
         articleCard.innerHTML = `
             <h2>${article.webTitle}</h2>
-            <p>${article.sectionName}</p>
-            <p>${article.webPublicationDate}</p>
-            <a href="${article.webUrl}">LINK TO ARTICLE</a>
+            <p>Category: ${article.sectionName}</p>
+            <p>Published: ${article.webPublicationDate}</p>
+            <a href="${article.webUrl}">Read article</a>
         `;
 
         const removeButton = document.createElement("button");
         removeButton.classList.add("removeButton");
-        removeButton.textContent = "Läs klart? Ta bort den här artikeln";
+        removeButton.textContent = "Done reading? Remove this article";
         removeButton.addEventListener("click", () => removeArticle(article));
 
         articleCard.appendChild(removeButton);
@@ -115,6 +115,7 @@ function renderSavedArticles() {
 }
 
 function createPages(totalPages, currentPage, query, category) {
+
     let pageContainer = document.getElementById("pageContainer");
 
     if (!pageContainer) { // Makes sure we render a new container 
@@ -127,7 +128,7 @@ function createPages(totalPages, currentPage, query, category) {
 
     totalPages = Math.min(totalPages, 100); // Sets max number of pages to 100
 
-    const maxVisiblePages = 5; 
+    const maxVisiblePages = 3; 
     const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2)); // Sets the start page in relation to current page
     const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1); // Sets end page in relation to the max amount of pages
 
@@ -182,10 +183,8 @@ function createPages(totalPages, currentPage, query, category) {
     }
 }
 
-
 function saveArticle(article) {
 
-    // Saves article based on it's URL, can't save same article twice
     if (!savedArticles.some(saved => saved.webUrl === article.webUrl)) {
         savedArticles.push(article);
         renderSavedArticles();
@@ -195,25 +194,16 @@ function saveArticle(article) {
 }
 
 function removeArticle(article) {
-   
-    // Filters out the article we want to remove by it's URL
+
     savedArticles = savedArticles.filter(saved => saved.webUrl !== article.webUrl);
 
     renderSavedArticles();
     saveToLocalStorage();
 }
 
-
 function saveToLocalStorage () {
     localStorage.setItem("savedArticles", JSON.stringify(savedArticles));
 }
 
+// Initial page load
 fetchNews();
-
-// Only render saved articles if we have any saved
-const saved = localStorage.getItem("savedArticles");
-
-if(saved) {
-    savedArticles = JSON.parse(saved);
-    renderSavedArticles();
-}

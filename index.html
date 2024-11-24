@@ -7,24 +7,27 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
     <header>
-        <h1>Nyheter</h1>
+        <h1>Latest News</h1>
 
         <div id="filterContainer">
 
-            <input type="text" id="searchInput" placeholder="Sök efter nyheter...">
+            <input type="text" id="searchInput" placeholder="Search for news...">
 
             <select id="selectCategory">
-                <option value="">Alla</option>
-                <option value="education">Kategori 1</option>
-                <option value="">Kategori 2</option>
-                <option value="">Kategori 3</option>
+                <option value="">All</option>
+                <option value="education">Education</option>
+                <option value="sport">Sport</option>
+                <option value="football">Football</option>
+                <option value="culture">Culture</option>
+                <option value="society">Society</option>
+                <option value="politics">Politics</option>
             </select>
 
             <button id="searchButton">Sök</button>
 
         </div>
-
     </header>
 
     <main>
@@ -34,11 +37,9 @@
         <div id="newsContainer"></div>
         <p id="errorMessage"></p>
 
-        
     </main>
 
-    
-
     <script src="script.js"></script>
+
 </body>
 </html>
