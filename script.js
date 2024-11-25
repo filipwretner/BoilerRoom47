@@ -1,5 +1,6 @@
 const apiKey = "658e6403-0a2e-4101-80da-026e0e38aeb5"; // API nyckel from Guardian
 let savedArticles = []; // Initiates empty array for localStorage
+let isSavedNewsVisible = false;
 
 // Link to endpoints: https://open-platform.theguardian.com/documentation/
 
@@ -9,6 +10,7 @@ const searchButton = document.getElementById("searchButton");
 const newsContainer = document.getElementById("newsContainer");
 const errorMessage = document.getElementById("errorMessage");
 const savedNewsContainer = document.getElementById("savedNewsContainer");
+const toggleSavedButton = document.getElementById("toggleSavedButton");
 
 function fetchNews(query = "", category = "", page = 1) {
 
@@ -47,6 +49,8 @@ function fetchNews(query = "", category = "", page = 1) {
 }
 
 searchButton.addEventListener("click", () => {
+    errorMessage.textContent = "";
+
     const query = searchInput.value.trim();
     const category = selectCategory.value;
     fetchNews(query, category);
@@ -184,22 +188,40 @@ function createPages(totalPages, currentPage, query, category) {
 }
 
 function saveArticle(article) {
+    errorMessage.textContent = "";
 
     if (!savedArticles.some(saved => saved.webUrl === article.webUrl)) {
         savedArticles.push(article);
         renderSavedArticles();
         saveToLocalStorage();
+    } else {
+        errorMessage.textContent = "You can't save the same article twice.";
     }
 
 }
 
 function removeArticle(article) {
+    errorMessage.textContent = "";
 
     savedArticles = savedArticles.filter(saved => saved.webUrl !== article.webUrl);
 
     renderSavedArticles();
     saveToLocalStorage();
 }
+
+toggleSavedButton.addEventListener("click", () => {
+    errorMessage.textContent = "";
+
+    isSavedNewsVisible = !isSavedNewsVisible; 
+    if (isSavedNewsVisible) {
+        savedNewsContainer.style.display = "block"; 
+        toggleSavedButton.textContent = "Dölj sparade artiklar"; 
+
+    } else {
+        savedNewsContainer.style.display = "none"; 
+        toggleSavedButton.textContent = "Show saved articles"; 
+    }   
+});
 
 function saveToLocalStorage () {
     localStorage.setItem("savedArticles", JSON.stringify(savedArticles));
