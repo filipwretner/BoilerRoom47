@@ -1,4 +1,4 @@
-const apiKey = "658e6403-0a2e-4101-80da-026e0e38aeb5"; // API nyckel from Guardian
+const apiKey = "e2cdaae4-9939-4f56-bbfe-935b38c37691"; // API nyckel from Guardian
 let savedArticles = []; // Initiates empty array for localStorage
 let isSavedNewsVisible = false;
 
