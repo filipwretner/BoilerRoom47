@@ -78,6 +78,18 @@ input:focus, select:focus {
   text-align: center;
   padding: 10px;
 }
+
+#savedNewsContainer {
+  visibility: hidden;
+  height: 0;
+  transition: visibility 0.3s ease, height 0.3s ease;
+  border-bottom: 1rem solid #1e3a8a;
+}
+
+#savedNewsContainer.active {
+  visibility: visible;
+  height: auto;
+}
   
 .articleCard {
   background-color: #f3f4f6;
@@ -121,10 +133,6 @@ a:hover {
 
 .articleCard button:hover {
   background-color: #2563eb;
-}
-
-#savedNewsContainer {
-  display: none;
 }
 
 #pageContainer {

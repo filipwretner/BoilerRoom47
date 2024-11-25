@@ -215,7 +215,8 @@ toggleSavedButton.addEventListener("click", () => {
 
     isSavedNewsVisible = !isSavedNewsVisible; 
     if (isSavedNewsVisible) {
-        savedNewsContainer.style.display = "block"; 
+        savedNewsContainer.style.display = "grid"; 
+        savedNewsContainer.classList.add("active");
         toggleSavedButton.textContent = "Dölj sparade artiklar"; 
 
     } else {
