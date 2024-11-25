@@ -133,9 +133,9 @@ function createPages(totalPages, currentPage, query, category) {
 
     totalPages = 100;
 
-    const maxVisiblePages = 3; 
-    const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2)); 
-    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1); 
+    // Vi vill visa 3 knappar
+    const startPage = Math.max(1, currentPage - 1); 
+    const endPage = Math.min(totalPages, startPage + 2); 
 
     if (startPage > 1) {
 
@@ -166,7 +166,7 @@ function createPages(totalPages, currentPage, query, category) {
     // Creates button that directs to last available page, but only if we select different page than the last
     if (endPage < totalPages) {
 
-        // Creates dots if current page i
+        // Creates dots when apprpiate
         if (endPage < totalPages - 1) {
             const dots = document.createElement("span");
             dots.textContent = "...";
