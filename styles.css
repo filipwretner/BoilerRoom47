@@ -83,7 +83,7 @@ input:focus, select:focus {
   visibility: hidden;
   height: 0;
   transition: visibility 0.3s ease, height 0.3s ease;
-  border-bottom: 1rem solid #1e3a8a;
+  border-bottom: 15px solid #1e3a8a;
 }
 
 #savedNewsContainer.active {
@@ -149,7 +149,7 @@ a:hover {
   padding: 5px 15px;
   text-align: center;
 }
-  
+
 @media (max-width: 768px) {
   #newsContainer {
     grid-template-columns: 1fr;

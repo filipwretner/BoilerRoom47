@@ -131,21 +131,21 @@ function createPages(totalPages, currentPage, query, category) {
         pageContainer.innerHTML = "";
     }
 
-    totalPages = Math.min(totalPages, 100); // Sets max number of pages to 100
+    totalPages = 100;
 
     const maxVisiblePages = 3; 
-    const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2)); // Sets the start page in relation to current page
-    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1); // Sets end page in relation to the max amount of pages
+    const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2)); 
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1); 
 
     if (startPage > 1) {
 
-        // Makes sure we have a button that always directs to the first page
+        // Creates button that directs to first page
         const firstPageButton = document.createElement("button");
         firstPageButton.textContent = "1";
         firstPageButton.addEventListener("click", () => fetchNews(query, category, 1));
         pageContainer.appendChild(firstPageButton);
 
-        // Adds dots between the first button if there's a gap to the start page, if startPage is 1 or 2 there's no dots
+        // Adds dots if we select a page bigger than 4
         if (startPage > 2) {
             const dots = document.createElement("span");
             dots.textContent = "...";
@@ -159,22 +159,14 @@ function createPages(totalPages, currentPage, query, category) {
         const pageButton = document.createElement("button");
         pageButton.classList.add("pageButton");
         pageButton.textContent = i;
-
-        if (i === currentPage) {
-            pageButton.classList.add("active");
-        }
-
-        pageButton.addEventListener("click", () => {
-            fetchNews(query, category, i);
-        });
-
+        pageButton.addEventListener("click", () => fetchNews(query, category, i));
         pageContainer.appendChild(pageButton);
     }
 
     // Creates button that directs to last available page, but only if we select different page than the last
     if (endPage < totalPages) {
 
-        // Creates some dots between endPage button and last button
+        // Creates dots if current page i
         if (endPage < totalPages - 1) {
             const dots = document.createElement("span");
             dots.textContent = "...";
