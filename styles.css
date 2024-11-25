@@ -1,18 +1,74 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background-color:#1e3b8ac7;
+  background-color: #1e3b8ac7;
 }
   
+button:hover {
+  cursor: pointer;
+}
+
 header {
   display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
+  padding: 15px 20px;
   background-color: #1e3a8a;
   color: #ffffff;
 }
-  
+
+h1 {
+  text-align: center;
+  font-family:'Times New Roman', Times, serif;
+}
+
+#filterContainer {
+  display: flex;
+  gap: 5px;
+}
+
+input, select {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  background-color: #ffffff;
+}
+
+input:focus, select:focus {
+  outline: none;
+}
+
+#searchButton {
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 15px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+#searchButton:hover {
+  background-color: #234ac9; 
+}
+
+#toggleSavedButton {
+  background-color: #14b8a6;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+#toggleSavedButton:hover {
+  background-color: #0d9488;
+}
+
 #newsContainer, #savedNewsContainer {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -34,6 +90,7 @@ header {
   transition: transform 0.5s ease, box-shadow 0.5s ease;
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
 .articleCard:hover {
@@ -51,6 +108,21 @@ a:hover {
   text-decoration: underline;
 }
 
+.articleCard button {
+  background-color: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: auto;
+}
+
+.articleCard button:hover {
+  background-color: #2563eb;
+}
+
 #savedNewsContainer {
   display: none;
 }
@@ -58,14 +130,15 @@ a:hover {
 #pageContainer {
   display: flex;
   justify-content: center;
-  gap: 2px;
+  gap: 5px;
+  margin: 1rem;
 }
 
 #pageContainer button {
-  border: none;
+  background-color: #e5e7eb;
+  border: 1px solid black;
   border-radius: 5px;
-  height: 1.5rem;
-  width: 2rem;
+  padding: 5px 15px;
   text-align: center;
 }
   
