@@ -1,5 +1,7 @@
-const apiKey = "e2cdaae4-9939-4f56-bbfe-935b38c37691"; // API nyckel from Guardian
-let savedArticles = []; // Initiates empty array for localStorage
+const guardianApiKey = "658e6403-0a2e-4101-80da-026e0e38aeb5"; // API key from Guardian
+const nytimesApiKey = "aepTcnmDxmTEQsLgo78WwAXSjr8Z5Fd4";
+
+let savedArticles = []; 
 let isSavedNewsVisible = false;
 
 // Link to endpoints: https://open-platform.theguardian.com/documentation/
@@ -14,44 +16,97 @@ const toggleSavedButton = document.getElementById("toggleSavedButton");
 
 async function fetchNews(query = "", category = "", page = 1) {
 
-    let url = `https://content.guardianapis.com/search?q=${query}&from-date=2014-01-01&page=${page}&page-size=6&order-by=newest&api-key=${apiKey}`;
-
-    if (category) {
-        url += `&section=${category}`; // Adds category to the URL if we have one chosen
-    }
+    const guardianUrl = `https://content.guardianapis.com/search?q=${query}&from-date=2014-01-01&page=${page}&page-size=6&order-by=newest&api-key=${guardianApiKey}`;
+    const nytimesUrl = `https://api.nytimes.com/svc/search/v2/articlesearch.json?q=${query}&page=${page - 1}&api-key=${nytimesApiKey}`;
 
     try {
-        const response = await fetch(url);
+        const [guardianResponse, nytimesResponse] = await Promise.all([
+            fetch(guardianUrl).then(response => {
 
-        if (!response.ok) {
+                if (!response.ok) {
 
-            switch (response.status) {
+                    switch (response.status) {
+        
+                        case 404:
+                            throw new Error("404 Error, couldnt find anything");
+                            break;
+        
+                        case 401:
+                            throw new Error("401 Error, unauthorized access");
+                            break;
+                        
+                        case 500:
+                            throw new Error("500 Error, server");
+                            break;
+        
+                        case 429: 
+                            throw new Error("429 Error, too many requests from Guardian");
+        
+                        default:
+                            throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
+                            break;
+                    }
+                }
 
-                case 404:
-                    throw new Error("404 Error, couldnt find anything");
-                    break;
+                return response.json();
+            }),
+            fetch(nytimesUrl).then(response => {
 
-                case 401:
-                    throw new Error("401 Error, unauthorized access");
-                    break;
-                
-                case 500:
-                    throw new Error("500 Error, server");
-                    break;
+                if (!response.ok) {
 
-                case 429: 
-                    throw new Error("429 Error, too many requests");
+                    switch (response.status) {
+        
+                        case 404:
+                            throw new Error("404 Error, couldnt find anything");
+                            break;
+        
+                        case 401:
+                            throw new Error("401 Error, unauthorized access");
+                            break;
+                        
+                        case 500:
+                            throw new Error("500 Error, server");
+                            break;
+        
+                        case 429: 
+                            throw new Error("429 Error, too many requests from NY Times");
+        
+                        default:
+                            throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
+                            break;
+                    }
+                }
 
-                default:
-                    throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
-                    break;
-            }
-        }
+                return response.json();
+            }),
+        ]);
 
-        const data = await response.json();
+        const guardianArticles = guardianResponse.response.results.map(article => ({
+            title: article.webTitle,
+            category: article.sectionName,
+            date: article.webPublicationDate,
+            url: article.webUrl,
+            source: "Guardian"
+        }));
 
-        displayNews(data.response.results);
-        createPages(data.response.pages, page, query, category);
+        const nytimesArticles = nytimesResponse.response.results ? nytimesResponse.response.results.map(article => ({
+            title: article.headline.name,
+            category: article.section_name || "Unknown",
+            date: article.pub_date,
+            url: article.web_url,
+            source: "Ny Times"
+        })) : [];
+
+        const allArticles = [...guardianArticles, ...nytimesArticles];
+
+        const guardianPages = guardianResponse.response.pages;
+        const nytimesTotalHits = nytimesResponse.response.meta.hits;
+        const nytimesPages = Math.ceil(nytimesTotalHits / 10);
+
+        const totalPages = Math.min(guardianPages, nytimesPages);
+
+        displayNews(allArticles);
+        createPages(totalPages, page, query, category);
 
         const isArticlesSaved = localStorage.getItem("savedArticles");
 
@@ -82,7 +137,7 @@ async function fetchNews(query = "", category = "", page = 1) {
                 errorMessage.textContent = "429 error, too many request"
             
             default:
-                errorMessage.textContent = "Unexpected error";
+                errorMessage.textContent = `Unexpected error: ${error}`;
         }
     }
 }
@@ -110,10 +165,11 @@ function displayNews(articles) {
         articleCard.classList.add("articleCard");
 
         articleCard.innerHTML = `
-            <h2>${article.webTitle}</h2>
-            <p>Category: ${article.sectionName}</p>
-            <p>Published: ${article.webPublicationDate}</p>
-            <a href="${article.webUrl}">Read article</a>
+            <h2>${article.title}</h2>
+            <p>Category: ${article.category}</p>
+            <p>Published: ${new Date(article.date).toLocaleDateString()}</p>
+            <p>Source: ${article.source}</p>
+            <a href="${article.url}">Read article</a>
         `;
 
 
@@ -142,10 +198,11 @@ function renderSavedArticles() {
         articleCard.classList.add("articleCard");
 
         articleCard.innerHTML = `
-            <h2>${article.webTitle}</h2>
-            <p>Category: ${article.sectionName}</p>
-            <p>Published: ${article.webPublicationDate}</p>
-            <a href="${article.webUrl}">Read article</a>
+            <h2>${article.title}</h2>
+            <p>Category: ${article.category}</p>
+            <p>Published: ${new Date(article.date).toLocaleDateString()}</p>
+            <p>Source: ${article.source}</p>
+            <a href="${article.url}">Read article</a>
         `;
 
         const removeButton = document.createElement("button");
@@ -169,8 +226,6 @@ function createPages(totalPages, currentPage, query, category) {
     } else {
         pageContainer.innerHTML = "";
     }
-
-    totalPages = 100;
 
     // Vi vill visa 3 knappar
     const startPage = Math.max(1, currentPage - 1); 
@@ -222,7 +277,7 @@ function createPages(totalPages, currentPage, query, category) {
 function saveArticle(article) {
     errorMessage.textContent = "";
 
-    if (!savedArticles.some(saved => saved.webUrl === article.webUrl)) {
+    if (!savedArticles.some(saved => saved.url === article.url)) {
         savedArticles.push(article);
         renderSavedArticles();
         saveToLocalStorage();
@@ -235,7 +290,7 @@ function saveArticle(article) {
 function removeArticle(article) {
     errorMessage.textContent = "";
 
-    savedArticles = savedArticles.filter(saved => saved.webUrl !== article.webUrl);
+    savedArticles = savedArticles.filter(saved => saved.url !== article.url);
 
     renderSavedArticles();
     saveToLocalStorage();
