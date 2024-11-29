@@ -12,7 +12,7 @@ const errorMessage = document.getElementById("errorMessage");
 const savedNewsContainer = document.getElementById("savedNewsContainer");
 const toggleSavedButton = document.getElementById("toggleSavedButton");
 
-function fetchNews(query = "", category = "", page = 1) {
+async function fetchNews(query = "", category = "", page = 1) {
 
     let url = `https://content.guardianapis.com/search?q=${query}&from-date=2014-01-01&page=${page}&page-size=6&order-by=newest&api-key=${apiKey}`;
 
@@ -20,32 +20,71 @@ function fetchNews(query = "", category = "", page = 1) {
         url += `&section=${category}`; // Adds category to the URL if we have one chosen
     }
 
-    fetch(url)
-    .then(response => {
+    try {
+        const response = await fetch(url);
 
-        if(!response.ok) {
-            throw new Error (`HTTP Error! Status: ${response.status}`);
+        if (!response.ok) {
+
+            switch (response.status) {
+
+                case 404:
+                    throw new Error("404 Error, couldnt find anything");
+                    break;
+
+                case 401:
+                    throw new Error("401 Error, unauthorized access");
+                    break;
+                
+                case 500:
+                    throw new Error("500 Error, server");
+                    break;
+
+                case 429: 
+                    throw new Error("429 Error, too many requests");
+
+                default:
+                    throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
+                    break;
+            }
         }
-        return response.json();
 
-    })
-    .then(data => {
+        const data = await response.json();
+
         displayNews(data.response.results);
         createPages(data.response.pages, page, query, category);
 
-        // Only render local storage if we have any articles stored
-        const saved = localStorage.getItem("savedArticles");
+        const isArticlesSaved = localStorage.getItem("savedArticles");
 
-        if (saved) {
-            savedArticles = JSON.parse(saved); 
+        if (isArticlesSaved) {
+            savedArticles = JSON.parse(isArticlesSaved);
             renderSavedArticles();
         }
 
-    })
-    .catch(error => {
-        console.error("An error occured when fetchind data!", error);
-        errorMessage.textContent = "An error occured when fetching data!";
-    });
+    } catch (error) {
+
+        console.error(`An error occured when fetching news: ${error}`);
+
+        switch (true) {
+
+            case error.message.includes("404"):
+                errorMessage.textContent = "404 Error, couldn't find any news.";
+                break;
+            
+            case error.message.includes("401"):
+                errorMessage.textContent = "401 error, unauthorized access";
+                break;
+
+            case error.message.includes("500"):
+                errorMessage.textContent = "500 error, server";
+                break;
+
+            case error.message.includes("429"):
+                errorMessage.textContent = "429 error, too many request"
+            
+            default:
+                errorMessage.textContent = "Unexpected error";
+        }
+    }
 }
 
 searchButton.addEventListener("click", () => {
