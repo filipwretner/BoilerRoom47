@@ -1,5 +1,5 @@
 const apiKey = "e2cdaae4-9939-4f56-bbfe-935b38c37691"; // API nyckel from Guardian
-let savedArticles = []; // Initiates empty array for localStorage
+let savedArticles = [];
 let isSavedNewsVisible = false;
 
 // Link to endpoints: https://open-platform.theguardian.com/documentation/
@@ -12,7 +12,7 @@ const errorMessage = document.getElementById("errorMessage");
 const savedNewsContainer = document.getElementById("savedNewsContainer");
 const toggleSavedButton = document.getElementById("toggleSavedButton");
 
-function fetchNews(query = "", category = "", page = 1) {
+async function fetchNews(query = "", category = "", page = 1) {
 
     let url = `https://content.guardianapis.com/search?q=${query}&from-date=2014-01-01&page=${page}&page-size=6&order-by=newest&api-key=${apiKey}`;
 
@@ -20,32 +20,65 @@ function fetchNews(query = "", category = "", page = 1) {
         url += `&section=${category}`; // Adds category to the URL if we have one chosen
     }
 
-    fetch(url)
-    .then(response => {
+    try {
+        const response = await fetch(url);
 
-        if(!response.ok) {
-            throw new Error (`HTTP Error! Status: ${response.status}`);
+        if (!response.ok) {
+
+            switch (response.status) {
+
+                case 404:
+                    throw new Error("404 Error, couldnt find anything");
+                    break;
+
+                case 401:
+                    throw new Error("401 Error, unauthorized access");
+                    break;
+                
+                case 500:
+                    throw new Error("500 Error, server");
+                    break;
+
+                default:
+                    throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
+                    break;
+            }
         }
-        return response.json();
 
-    })
-    .then(data => {
+        const data = await response.json();
+
         displayNews(data.response.results);
         createPages(data.response.pages, page, query, category);
 
-        // Only render local storage if we have any articles stored
-        const saved = localStorage.getItem("savedArticles");
+        const isArticlesSaved = localStorage.getItem("savedArticles");
 
-        if (saved) {
-            savedArticles = JSON.parse(saved); 
+        if (isArticlesSaved) {
+            savedArticles = JSON.parse(isArticlesSaved);
             renderSavedArticles();
         }
 
-    })
-    .catch(error => {
-        console.error("An error occured when fetchind data!", error);
-        errorMessage.textContent = "An error occured when fetching data!";
-    });
+    } catch (error) {
+
+        console.error(`An error occured when fetching news: ${error}`);
+
+        switch (true) {
+
+            case error.message.includes("404"):
+                errorMessage.textContent = "404 Error, couldn't find any news.";
+                break;
+            
+            case error.message.includes("401"):
+                errorMessage.textContent = "401 error, unauthorized access";
+                break;
+
+            case error.message.includes("500"):
+                error.message.textContent = "500 error, server";
+                break;
+            
+            default:
+                errorMessage.textContent = "Unexpected error";
+        }
+    }
 }
 
 searchButton.addEventListener("click", () => {
@@ -133,7 +166,7 @@ function createPages(totalPages, currentPage, query, category) {
 
     totalPages = 100;
 
-    // Vi vill visa 3 knappar
+    // Makes sure we always have 3 buttons 
     const startPage = Math.max(1, currentPage - 1); 
     const endPage = Math.min(totalPages, startPage + 2); 
 
@@ -209,7 +242,7 @@ toggleSavedButton.addEventListener("click", () => {
     if (isSavedNewsVisible) {
         savedNewsContainer.style.display = "grid"; 
         savedNewsContainer.classList.add("active");
-        toggleSavedButton.textContent = "Dölj sparade artiklar"; 
+        toggleSavedButton.textContent = "Hide saved articles"; 
 
     } else {
         savedNewsContainer.style.display = "none"; 
