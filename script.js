@@ -33,21 +33,22 @@ async function fetchNews(query = "", category = "", page = 1) {
 
             if (!response.ok) {
 
+                
                 switch (response.status) {
 
-                    case "404":
-                        throw new Error("404 Error: Couldn't find the requested source");
+                    case 404:
+                        throw new Error("404 Error: Couldn't find the any news");
                         break;
 
-                    case "401":
+                    case 401:
                         throw new Error("401 Error: Unauthorized Access to the Guardian");
                         break;
                 
-                    case "500":
+                    case 500:
                         throw new Error("500 Error: Internal Server Error");
                         break;
 
-                    case "429":
+                    case 429:
                         throw new Error("429 Error: Too many requests from the Guardian API Key");
                         break; 
 
@@ -65,19 +66,19 @@ async function fetchNews(query = "", category = "", page = 1) {
 
                 switch (response.status) {
     
-                    case "404":
-                        throw new Error("404 Error: Couldn't find the requested source");
+                    case 404:
+                        throw new Error("404 Error: Couldn't find the weather for requested city");
                         break;
     
-                    case "401":
+                    case 401:
                         throw new Error("401 Error: Unauthorized Access to OpenWeather");
                         break;
                     
-                    case "500":
+                    case 500:
                         throw new Error("500 Error: Internal Server Error");
                         break;
     
-                    case "429":
+                    case 429:
                         throw new Error("429 Error: Too many requests from the OpenWeather API key");
                         break; 
     
@@ -103,7 +104,7 @@ async function fetchNews(query = "", category = "", page = 1) {
 
     } catch (error) {
         console.error(`An error occured: ${error}`);
-        errorMessage.textContent = `Error: ${error.message}`;
+        errorMessage.textContent = `${error.message}`;
     }
 }
 
