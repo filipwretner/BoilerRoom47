@@ -9,6 +9,13 @@ button:hover {
 }
 
 header {
+  font-size: larger;
+  padding: 15px 20px;
+  background-color: #1e3a8a;
+  color: #ffffff;
+}
+
+section {
   display: flex;
   flex-wrap: wrap;
   flex-direction: row;

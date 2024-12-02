@@ -1,11 +1,13 @@
 const guardianApiKey = "658e6403-0a2e-4101-80da-026e0e38aeb5"; // API key from Guardian
-const nytimesApiKey = "aepTcnmDxmTEQsLgo78WwAXSjr8Z5Fd4";
+const openweatherApiKey = "d7dcd9932a82cc785d33a798d7d792e4"; // API key from Openweather
 
 let savedArticles = []; 
 let isSavedNewsVisible = false;
 
 // Link to endpoints: https://open-platform.theguardian.com/documentation/
+// openweather api call: https://api.openweathermap.org/data/2.5/weather?q={city name}&appid={API key}
 
+const weatherContainer = document.getElementById("weatherContainer");
 const searchInput = document.getElementById("searchInput");
 const selectCategory = document.getElementById("selectCategory");
 const searchButton = document.getElementById("searchButton");
@@ -14,99 +16,83 @@ const errorMessage = document.getElementById("errorMessage");
 const savedNewsContainer = document.getElementById("savedNewsContainer");
 const toggleSavedButton = document.getElementById("toggleSavedButton");
 
+
+
 async function fetchNews(query = "", category = "", page = 1) {
 
-    const guardianUrl = `https://content.guardianapis.com/search?q=${query}&from-date=2014-01-01&page=${page}&page-size=6&order-by=newest&api-key=${guardianApiKey}`;
-    const nytimesUrl = `https://api.nytimes.com/svc/search/v2/articlesearch.json?q=${query}&page=${page - 1}&api-key=${nytimesApiKey}`;
+    let guardianUrl = `https://content.guardianapis.com/search?q=${query}&from-date=2014-01-01&page=${page}&page-size=6&order-by=newest&api-key=${guardianApiKey}`;
+    let openweatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=linkoping&appid=${openweatherApiKey}`;
+
+    if (category) {
+        guardianUrl += `&section=${category}`; // Adds category to the URL if we have one chosen
+    }
 
     try {
-        const [guardianResponse, nytimesResponse] = await Promise.all([
-            fetch(guardianUrl).then(response => {
+        const [guardianResponse, openweatherResponse] = await Promise.all([
+           fetch(guardianUrl).then(response => {
 
-                if (!response.ok) {
+            if (!response.ok) {
 
-                    switch (response.status) {
-        
-                        case 404:
-                            throw new Error("404 Error, couldnt find anything");
-                            break;
-        
-                        case 401:
-                            throw new Error("401 Error, unauthorized access");
-                            break;
-                        
-                        case 500:
-                            throw new Error("500 Error, server");
-                            break;
-        
-                        case 429: 
-                            throw new Error("429 Error, too many requests from Guardian");
-        
-                        default:
-                            throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
-                            break;
-                    }
+                switch (response.status) {
+
+                    case "404":
+                        throw new Error("404 Error: Couldn't find the requested source");
+                        break;
+
+                    case "401":
+                        throw new Error("401 Error: Unauthorized Access to the Guardian");
+                        break;
+                
+                    case "500":
+                        throw new Error("500 Error: Internal Server Error");
+                        break;
+
+                    case "429":
+                        throw new Error("429 Error: Too many requests from the Guardian API Key");
+                        break; 
+
+                    default:
+                        throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
+                        break;
                 }
+            }  
 
-                return response.json();
-            }),
-            fetch(nytimesUrl).then(response => {
+            return response.json();
+        }),
+        fetch(openweatherUrl).then(response => {
 
-                if (!response.ok) {
+            if (!response.ok) {
 
-                    switch (response.status) {
-        
-                        case 404:
-                            throw new Error("404 Error, couldnt find anything");
-                            break;
-        
-                        case 401:
-                            throw new Error("401 Error, unauthorized access");
-                            break;
-                        
-                        case 500:
-                            throw new Error("500 Error, server");
-                            break;
-        
-                        case 429: 
-                            throw new Error("429 Error, too many requests from NY Times");
-        
-                        default:
-                            throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
-                            break;
-                    }
+                switch (response.status) {
+    
+                    case "404":
+                        throw new Error("404 Error: Couldn't find the requested source");
+                        break;
+    
+                    case "401":
+                        throw new Error("401 Error: Unauthorized Access to OpenWeather");
+                        break;
+                    
+                    case "500":
+                        throw new Error("500 Error: Internal Server Error");
+                        break;
+    
+                    case "429":
+                        throw new Error("429 Error: Too many requests from the OpenWeather API key");
+                        break; 
+    
+                    default:
+                        throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
+                        break;
                 }
+            }
 
-                return response.json();
-            }),
+            return response.json();
+        })
         ]);
 
-        const guardianArticles = guardianResponse.response.results.map(article => ({
-            title: article.webTitle,
-            category: article.sectionName,
-            date: article.webPublicationDate,
-            url: article.webUrl,
-            source: "Guardian"
-        }));
-
-        const nytimesArticles = nytimesResponse.response.results ? nytimesResponse.response.results.map(article => ({
-            title: article.headline.name,
-            category: article.section_name || "Unknown",
-            date: article.pub_date,
-            url: article.web_url,
-            source: "Ny Times"
-        })) : [];
-
-        const allArticles = [...guardianArticles, ...nytimesArticles];
-
-        const guardianPages = guardianResponse.response.pages;
-        const nytimesTotalHits = nytimesResponse.response.meta.hits;
-        const nytimesPages = Math.ceil(nytimesTotalHits / 10);
-
-        const totalPages = Math.min(guardianPages, nytimesPages);
-
-        displayNews(allArticles);
-        createPages(totalPages, page, query, category);
+        displayItems(guardianResponse.response.results, openweatherResponse);
+        createPages(guardianResponse.response.pages, page, query, category);
 
         const isArticlesSaved = localStorage.getItem("savedArticles");
 
@@ -116,29 +102,8 @@ async function fetchNews(query = "", category = "", page = 1) {
         }
 
     } catch (error) {
-
-        console.error(`An error occured when fetching news: ${error}`);
-
-        switch (true) {
-
-            case error.message.includes("404"):
-                errorMessage.textContent = "404 Error, couldn't find any news.";
-                break;
-            
-            case error.message.includes("401"):
-                errorMessage.textContent = "401 error, unauthorized access";
-                break;
-
-            case error.message.includes("500"):
-                errorMessage.textContent = "500 error, server";
-                break;
-
-            case error.message.includes("429"):
-                errorMessage.textContent = "429 error, too many request"
-            
-            default:
-                errorMessage.textContent = `Unexpected error: ${error}`;
-        }
+        console.error(`An error occured: ${error}`);
+        errorMessage.textContent = `Error: ${error.message}`;
     }
 }
 
@@ -150,7 +115,7 @@ searchButton.addEventListener("click", () => {
     fetchNews(query, category);
 });
 
-function displayNews(articles) {
+function displayItems(articles, weatherData) {
 
     newsContainer.innerHTML = "";
 
@@ -159,17 +124,22 @@ function displayNews(articles) {
         return;
     }
 
+    weatherContainer.innerHTML = `
+            <h3>City: ${weatherData.name}</h3>
+            <p>Temparature: ${parseInt(weatherData.main.temp - 273.15)} ºC</p>
+            <p>Currently: ${weatherData.weather[0].description}</p>
+    `;
+
     // Creates cards for every article we fetch with the API
     articles.forEach(article => {
         const articleCard = document.createElement("div");
         articleCard.classList.add("articleCard");
 
         articleCard.innerHTML = `
-            <h2>${article.title}</h2>
-            <p>Category: ${article.category}</p>
-            <p>Published: ${new Date(article.date).toLocaleDateString()}</p>
-            <p>Source: ${article.source}</p>
-            <a href="${article.url}">Read article</a>
+            <h2>${article.webTitle}</h2>
+            <p>Category: ${article.sectionName}</p>
+            <p>Published: ${new Date(article.webPublicationDate).toLocaleDateString()}</p>
+            <a href="${article.webUrl}">Read article</a>
         `;
 
 
@@ -198,11 +168,10 @@ function renderSavedArticles() {
         articleCard.classList.add("articleCard");
 
         articleCard.innerHTML = `
-            <h2>${article.title}</h2>
-            <p>Category: ${article.category}</p>
-            <p>Published: ${new Date(article.date).toLocaleDateString()}</p>
-            <p>Source: ${article.source}</p>
-            <a href="${article.url}">Read article</a>
+            <h2>${article.webTitle}</h2>
+            <p>Category: ${article.sectionName}</p>
+            <p>Published: ${new Date(article.webPublicationDate).toLocaleDateString()}</p>
+            <a href="${article.webUrl}">Read article</a>
         `;
 
         const removeButton = document.createElement("button");
@@ -227,7 +196,9 @@ function createPages(totalPages, currentPage, query, category) {
         pageContainer.innerHTML = "";
     }
 
-    // Vi vill visa 3 knappar
+    totalPages = 100;
+
+    // Sets interval of 3 buttons
     const startPage = Math.max(1, currentPage - 1); 
     const endPage = Math.min(totalPages, startPage + 2); 
 
@@ -303,7 +274,7 @@ toggleSavedButton.addEventListener("click", () => {
     if (isSavedNewsVisible) {
         savedNewsContainer.style.display = "grid"; 
         savedNewsContainer.classList.add("active");
-        toggleSavedButton.textContent = "Dölj sparade artiklar"; 
+        toggleSavedButton.textContent = "Hide saved articles"; 
 
     } else {
         savedNewsContainer.style.display = "none"; 
